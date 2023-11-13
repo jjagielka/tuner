@@ -14,7 +14,10 @@ sources = files (
     'Services/LocationDiscovery.vala',
 
     'Widgets/AbstractContentList.vala',
+    'Widgets/CenterBox.vala',
     'Widgets/ContentBox.vala',
+    'Widgets/DisplayBox.vala',
+    'Widgets/FrameBox.vala',
     'Widgets/HeaderBar.vala',
     'Widgets/HeaderLabel.vala',
     'Widgets/StationBox.vala',
@@ -23,10 +26,12 @@ sources = files (
     'Widgets/AboutDialog.vala',
     'Widgets/WelcomeButton.vala',
     'Widgets/Theme.vala',
+    'Widgets/TagsBox.vala',
     'Widgets/CountryList.vala',
     'Widgets/StationList.vala',
     'Widgets/RevealLabel.vala',
     'Widgets/PreferencesPopover.vala',
+    'Widgets/Utils.vala',
 
     'Application.vala',
     'Main.vala'

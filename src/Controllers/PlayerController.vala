@@ -13,6 +13,7 @@ public class Tuner.PlayerController : Object {
     public signal void station_changed (Model.Station station);
     public signal void state_changed (Gst.PlayerState state);
     public signal void title_changed (string title);
+    public signal void info_changed (Gst.PlayerMediaInfo info);
     public signal void volume_changed (double volume);
 
     construct {
@@ -32,12 +33,15 @@ public class Tuner.PlayerController : Object {
                 title_changed(title);
             }
         });
+        player.media_info_updated.connect ((obj) => { 
+            info_changed(obj); 
+        });
         player.volume_changed.connect ((obj) => {
             volume_changed(obj.volume);
         });
     }
 
-    public Gst.PlayerState? current_state { 
+    public Gst.PlayerState current_state { 
         get {
             return _current_state;
         }

@@ -49,8 +49,6 @@ public class Tuner.ContentBox : Gtk.Box {
         }
 
         header_label = new HeaderLabel (title);
-        header_label.xpad = 20;
-        header_label.ypad = 20;
         header.pack_start (header_label, false, false);
 
         if (action_icon_name != null && action_tooltip_text != null) {

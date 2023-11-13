@@ -15,6 +15,8 @@ public class Tuner.HeaderLabel : Gtk.Label {
         halign = Gtk.Align.START;
         xalign = 0;
         get_style_context ().add_class (Granite.STYLE_CLASS_H2_LABEL);
+        xpad = 20;
+        ypad = 20;
     }
 
 }

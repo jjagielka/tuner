@@ -114,6 +114,9 @@ public class Tuner.Window : Gtk.ApplicationWindow {
 
         var primary_box = new Gtk.Paned (Gtk.Orientation.HORIZONTAL);
 
+        var display_category = new Granite.Widgets.SourceList.ExpandableItem (_("Display"));
+        display_category.collapsible = false;
+        display_category.expanded = true;
 
         var selections_category = new Granite.Widgets.SourceList.ExpandableItem (_("Selections"));
         selections_category.collapsible = false;
@@ -128,6 +131,40 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         genres_category.expanded = true;
         
         source_list = new Granite.Widgets.SourceList ();
+        
+        // Display Box
+        var display_item = new Granite.Widgets.SourceList.Item (_("Display"));
+        display_item.icon = new ThemedIcon ("playlist-queue");
+        display_category.add (display_item);
+        
+        var display_box = new DisplayBox();
+        display_box.realize.connect(() => { 
+            player.station_changed.connect (display_box.update_from_station);
+            player.info_changed.connect (display_box.update_from_info);
+            display_box.update_from_station(player.station);
+            display_box.update_from_info (player.player.media_info);
+        });
+
+        var display_name = "display";
+        display_item.set_data<string> ("stack_child", display_name);
+        stack.add_named (display_box, display_name);
+        
+        // Tags Box
+        var tags_item = new Granite.Widgets.SourceList.Item (_("Tags"));
+        tags_item.icon = new ThemedIcon ("playlist-queue");
+        display_category.add (tags_item);
+        
+        var tags_box = new TagsBox();
+        tags_box.realize.connect(() => { 
+            player.station_changed.connect(tags_box.update_from_station);
+            player.info_changed.connect (tags_box.update_from_info);
+            tags_box.update_from_info(player.player.media_info);
+            tags_box.update_from_station(player.station);
+        });
+
+        var tags_name = "tags";
+        tags_item.set_data<string> ("stack_child", tags_name);
+        stack.add_named (tags_box, tags_name);
 
         // Discover Box
         var item1 = new Granite.Widgets.SourceList.Item (_("Discover"));
@@ -303,6 +340,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             c4.content = _slist;
         });
 
+        source_list.root.add (display_category);
         source_list.root.add (selections_category);
         source_list.root.add (searched_category);
         source_list.root.add (genres_category);
@@ -311,6 +349,12 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         source_list.selected = source_list.get_first_child (selections_category);
         source_list.item_selected.connect  ((item) => {
             var selected_item = item.get_data<string> ("stack_child");
+            stack.visible_child_name = selected_item;
+        });
+
+        // show as first
+        stack.realize.connect(() => {
+            var selected_item = source_list.selected.get_data<string> ("stack_child");
             stack.visible_child_name = selected_item;
         });
 
