@@ -14,7 +14,6 @@ sources = files (
     'Services/LocationDiscovery.vala',
 
     'Widgets/AbstractContentList.vala',
-    'Widgets/CenterBox.vala',
     'Widgets/ContentBox.vala',
     'Widgets/DisplayBox.vala',
     'Widgets/FrameBox.vala',
