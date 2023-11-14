@@ -12,6 +12,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
     public PlayerController player { get; construct; }
 
     private DirectoryController _directory;
+    private RadioTimesController _radiotimes;
     private HeaderBar headerbar;
     private Granite.Widgets.SourceList source_list;
     
@@ -111,6 +112,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         var data_file = Path.build_filename (Application.instance.data_dir, "favorites.json");
         var store = new Model.StationStore (data_file);
         _directory = new DirectoryController (store);
+        _radiotimes = new RadioTimesController (store);
 
         var primary_box = new Gtk.Paned (Gtk.Orientation.HORIZONTAL);
 
@@ -362,6 +364,9 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             if (text.length > 0) {
                 string mytext = text;
                 var s5 = _directory.load_search_stations (mytext, 100); 
+                // KUBA
+                stdout.printf(@"Search: $text\n");
+                var test = _radiotimes.load_search_stations (mytext, 100);
                 try {
                     var stations = s5.next ();
                     if (stations == null || stations.size == 0) {

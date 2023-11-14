@@ -2,6 +2,7 @@
 sources = files (
     'Controllers/DirectoryController.vala',
     'Controllers/PlayerController.vala',
+    'Controllers/RadioTimesControler.vala',
 
     'Models/Countries.vala',
     'Models/Genre.vala',
@@ -12,6 +13,7 @@ sources = files (
     'Services/DBusInterface.vala',
     'Services/RadioBrowserDirectory.vala',
     'Services/LocationDiscovery.vala',
+    'Services/RadioTimesDirectory.vala',
 
     'Widgets/AbstractContentList.vala',
     'Widgets/ContentBox.vala',
