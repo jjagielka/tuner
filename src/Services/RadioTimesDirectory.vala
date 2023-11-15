@@ -30,8 +30,8 @@ public class Station : Object {
 }
 
 private const string[] DEFAULT_BOOTSTRAP_SERVERS = {
-    "oplm.radiotime.com"
-};    
+    "opml.radiotime.com"
+};
 
 public bool EqualCompareString (string a, string b) {
     return a == b;
@@ -72,14 +72,13 @@ public class Client : Object {
 
     public ArrayList<Station> get_stations (string resource) throws DataError {
         debug (@"RB $resource");
-        stdout.printf (@"RB $resource\n");
 
         var message = new Soup.Message ("GET", @"$current_server/$resource");
         Json.Node rootnode;
 
         var response_code = _session.send_message (message);
         debug (@"response from radio-browser.info: $response_code");
-        stdout.printf (@"response from radio-browser.info: $response_code");
+
         var body = (string) message.response_body.data;
         if (body == null) {
             throw new DataError.NO_CONNECTION (@"unable to read response");
@@ -89,7 +88,10 @@ public class Client : Object {
         } catch (Error e) {
             throw new DataError.PARSE_DATA (@"unable to parse JSON response: $(e.message)");
         }
-        var rootarray = rootnode.get_array ();
+        var rootarray = rootnode.get_root()["body"].get_array ();
+
+        stdout.printf (@"$rootarray\n");
+        return new ArrayList<Station>();
 
         var stations = jarray_to_stations (rootarray);
         return stations;

@@ -361,12 +361,18 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         });
 
         headerbar.searched_for.connect ( (text) => {
+            stdout.printf(@"headerbar.search_for.connect: $text\n");
             if (text.length > 0) {
                 string mytext = text;
                 var s5 = _directory.load_search_stations (mytext, 100); 
                 // KUBA
                 stdout.printf(@"Search: $text\n");
                 var test = _radiotimes.load_search_stations (mytext, 100);
+                try {
+                    test.next ();
+                } catch (SourceError e) {
+                    error("byl blad");
+                }
                 try {
                     var stations = s5.next ();
                     if (stations == null || stations.size == 0) {

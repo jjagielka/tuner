@@ -26,8 +26,8 @@ public class Tuner.RadioTimesController : Object {
             query    = utext
         };
         var source = new StationSource2(limit, params, provider, store); 
-        var rsp = source.next();
-        stdout.printf(@"load_search_stations: $(rsp.size)\n");
+        // var rsp = source.next();
+        // stdout.printf(@"load_search_stations: $(rsp.size)\n");
         return source;
     }
 }
