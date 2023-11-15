@@ -59,7 +59,6 @@ public class Tuner.StationSource2 : Object {
             // TODO Place filter here?
             //var filtered_stations = raw_stations.filter (filterByCountry);
             var filtered_stations = raw_stations.iterator ();
-
             var stations = convert_stations (filtered_stations);
             _offset += _page_size;
             _more = stations.size > _page_size;
@@ -76,7 +75,7 @@ public class Tuner.StationSource2 : Object {
 
     private ArrayList<Model.Station> convert_stations (Iterator<RadioTimes.Station> raw_stations) {
         var stations = new ArrayList<Model.Station> ();
-        
+
         while (raw_stations.next()) {
         // foreach (var station in raw_stations) {
             var station = raw_stations.get ();
@@ -88,6 +87,8 @@ public class Tuner.StationSource2 : Object {
             if (_store.contains (s)) {
                 s.starred = true;
             }
+
+            stdout.printf(@"RAW $(station.stationuuid), $(station.name), $(Model.Countries.get_by_code(station.countrycode, station.country)), $(station.bitrate)\n");
             s.favicon_url = station.favicon;
             s.clickcount = station.clickcount;
             s.homepage = station.homepage;

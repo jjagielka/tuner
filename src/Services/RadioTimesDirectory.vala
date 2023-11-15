@@ -16,17 +16,89 @@ public struct SearchParams {
     string query;
 }
 
+public class StationRaw : Object {
+    public string element { get; set; }  // "outline",
+    //  [JsonProperty("@type")]
+    //  public string type { get; set; }  // "audio",
+    public string text { get; set; }  // "NME 1",
+    public string URL { get; set; }  // "http://opml.radiotime.com/Tune.ashx?id=s159857",
+    public string bitrate { get; set; }  // "256",
+    public string reliability { get; set; }  // "99",
+    public string guide_id { get; set; }  // "s159857",
+    public string subtext { get; set; }  // "Tearjerker - You Can",
+    public string genre_id { get; set; }  // "g2748",
+    public string formats { get; set; }  // "mp3",
+    public string playing { get; set; }  // "Tearjerker - You Can",
+    public string playing_image { get; set; }  // "http://cdn-albums.tunein.com/gn/Q5R53HC7QVq.jpg",
+    public string item { get; set; }  // "station",
+    public string image { get; set; }  // "http://cdn-profiles.tunein.com/s159857/images/logoq.jpg",
+    public string now_playing_id { get; set; }  // "s159857",
+    public string preset_id { get; set; }  // "s159857"    
+}
+
 public class Station : Object {
-    public string stationuuid { get; set; }
-    public string name { get; set; }
-    public string url_resolved { get; set; }
-    public string country { get; set; }
-    public string countrycode { get; set; }
-    public string favicon { get; set; }
-    public uint clickcount { get; set; }
-    public string homepage { get; set; }
-    public string codec { get; set; }
-    public int bitrate { get; set; }
+    private StationRaw station { get; set; }
+
+    public Station(StationRaw station) {
+        this.station = station;
+    }
+
+    public string stationuuid {
+        get {
+            if(station.preset_id == null)
+                stdout.printf(@"$(station.text)\n");
+            return station.preset_id;
+        }
+    }
+    public string name {
+        get {
+            return station.text;
+        }
+    }
+
+    public string countrycode {
+        get {
+            return "FR";  // sure to change it
+        }
+    }
+
+    public string country {
+        get {
+            return "France";  // sure to change it
+        }
+    }
+    public string url_resolved {
+        get {
+            return station.URL;  
+        }
+    }
+    public string favicon {
+        get {
+            return station.image;  
+        }
+    }
+    public uint clickcount {
+        get {
+            return 23;  // sure to change it
+        }
+    }
+    public string homepage {
+        get {
+            return station.URL;  
+        }
+    }
+    public int bitrate {
+        get {
+            //  return 128000;  // sure to change it
+            return int.parse( station.bitrate );  
+        }
+    }
+    public string codec {
+        get {
+            return "aac";  // sure to change it
+        }
+    }
+
 }
 
 private const string[] DEFAULT_BOOTSTRAP_SERVERS = {
@@ -80,6 +152,8 @@ public class Client : Object {
         debug (@"response from radio-browser.info: $response_code");
 
         var body = (string) message.response_body.data;
+        stdout.printf(body);
+
         if (body == null) {
             throw new DataError.NO_CONNECTION (@"unable to read response");
         }
@@ -88,25 +162,24 @@ public class Client : Object {
         } catch (Error e) {
             throw new DataError.PARSE_DATA (@"unable to parse JSON response: $(e.message)");
         }
-        var rootarray = rootnode.get_root()["body"].get_array ();
-
-        stdout.printf (@"$rootarray\n");
-        return new ArrayList<Station>();
+        var rootarray = rootnode.get_object().get_member("body").get_array ();
 
         var stations = jarray_to_stations (rootarray);
         return stations;
     }
 
-    private Station jnode_to_station (Json.Node node) {
-        return Json.gobject_deserialize (typeof (Station), node) as Station;
+    private StationRaw jnode_to_station (Json.Node node) {
+        return Json.gobject_deserialize (typeof (StationRaw), node) as StationRaw;
     }
 
     private ArrayList<Station> jarray_to_stations (Json.Array data) {
         var stations = new ArrayList<Station> ();
 
         data.foreach_element ((array, index, element) => {
-            Station s = jnode_to_station (element);
-            stations.add (s);
+            if(element.get_object().get_member("type").get_string() == "audio") {
+                StationRaw s = jnode_to_station (element);
+                stations.add (new Station(s));
+            }
         });
 
         return stations;
@@ -130,7 +203,7 @@ public class Client : Object {
 
         // by text or tags
         //  var resource = @"json/stations/search?limit=$rowcount&order=$(params.order)&offset=$offset";
-        var resource = @"Search.ashx?render=json";
+        var resource = @"Search.ashx?render=json&call=stream";
         if (params.query != null && params.query != "") { 
             resource += @"&query=$(params.query)";
         }
