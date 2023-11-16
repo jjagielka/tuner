@@ -25,26 +25,6 @@ public struct SearchParams {
 
 
 
-public class StationRaw : Object {
-    public string element { get; set; }  // "outline",
-    //  [JsonProperty("@type")]
-    //  public string type { get; set; }  // "audio",
-    public string text { get; set; }  // "NME 1",
-    public string URL { get; set; }  // "http://opml.radiotime.com/Tune.ashx?id=s159857",
-    public string bitrate { get; set; }  // "256",
-    public string reliability { get; set; }  // "99",
-    public string guide_id { get; set; }  // "s159857",
-    public string subtext { get; set; }  // "Tearjerker - You Can",
-    public string genre_id { get; set; }  // "g2748",
-    public string formats { get; set; }  // "mp3",
-    public string playing { get; set; }  // "Tearjerker - You Can",
-    public string playing_image { get; set; }  // "http://cdn-albums.tunein.com/gn/Q5R53HC7QVq.jpg",
-    public string item { get; set; }  // "station",
-    public string image { get; set; }  // "http://cdn-profiles.tunein.com/s159857/images/logoq.jpg",
-    public string now_playing_id { get; set; }  // "s159857",
-    public string preset_id { get; set; }  // "s159857"    
-}
-
 // JSON STUCTURES
 private class ResponseHead : Object {
     public string title { get; set; }
@@ -69,7 +49,35 @@ public class Link : Object {
 
     public string to_string () {
         return @"Link: $text: $URL";
-    }    
+    }
+}
+
+public class StationRaw : Object {
+    public string element { get; set; }  // "outline",
+    //  public string type { get; set; }  // "audio",
+    public string text { get; set; }  // "NME 1",
+    public string URL { get; set; }  // "http://opml.radiotime.com/Tune.ashx?id=s159857",
+    public string bitrate { get; set; }  // "256",
+    public string reliability { get; set; }  // "99",
+    public string guide_id { get; set; }  // "s159857",
+    public string subtext { get; set; }  // "Tearjerker - You Can",
+    public string genre_id { get; set; }  // "g2748",
+    public string formats { get; set; }  // "mp3",
+    public string playing { get; set; }  // "Tearjerker - You Can",
+    public string playing_image { get; set; }  // "http://cdn-albums.tunein.com/gn/Q5R53HC7QVq.jpg",
+    public string item { get; set; }  // "station",
+    public string image { get; set; }  // "http://cdn-profiles.tunein.com/s159857/images/logoq.jpg",
+    public string now_playing_id { get; set; }  // "s159857",
+    public string preset_id { get; set; }  // "s159857"
+}
+
+public class RadioTimesArrayList : Object {
+    public ArrayList<Link> links { get; set; }
+    public ArrayList<Station> stations { get; set; }
+    construct {
+        links = new ArrayList<Link>();
+        stations = new ArrayList<Station>();
+    }
 }
 
 public class Station : Object {
@@ -181,7 +189,7 @@ public class Client : Object {
     private Response get_resource (string resource) throws DataError {
         debug (@"RB $resource");
         stdout.printf (@"RB $resource");
-        
+
         var message = new Soup.Message ("GET", @"$current_server/$resource&render=json");
         Json.Node rootnode;
 
@@ -189,7 +197,7 @@ public class Client : Object {
         debug (@"response from radio-time.com: $response_code");
 
         var body = (string) message.response_body.data;
-        stdout.printf(body);
+        // stdout.printf(body);
 
         if (body == null) {
             throw new DataError.NO_CONNECTION (@"unable to read response");
@@ -207,18 +215,43 @@ public class Client : Object {
         };
     }
 
-    public ArrayList<Link> get_links (string resource) throws DataError {
+    public RadioTimesArrayList get_ (string resource) throws DataError {
+        RadioTimesArrayList result = new RadioTimesArrayList();
         var response = get_resource(resource);
-        var links = new ArrayList<Link> ();
-
         response.body.foreach_element ((array, index, element) => {
-            //if(element.get_object().get_member("type").get_string() == "link") {}
-            links.add (Json.gobject_deserialize (typeof (Link), element) as Link);
+            switch (element.get_object().get_member("type").get_string())
+            {
+                case "link":
+                    result.links.add (Json.gobject_deserialize (typeof (Link), element) as Link);
+                    break;
+                case "audio":
+                    result.stations.add (new Station(Json.gobject_deserialize (typeof (StationRaw), element) as StationRaw));
+                    break;
+                default:
+                    break;
+            };
         });
-        return links;    
+
+        return result;
+    }
+
+    public ArrayList<Link> get_links (string resource) throws DataError {
+        return get_(resource).links;
+        // var response = get_resource(resource);
+        // var links = new ArrayList<Link> ();
+
+        // response.body.foreach_element ((array, index, element) => {
+        //     var a = 
+        //     //if(element.get_object().get_member("type").get_string() == "link") {}
+        //     // Link link = Json.gobject_deserialize (typeof (Link), element) as Link;
+        //     Link link = new Link(element.get_object());
+        //     links.add (link);
+        // });
+        // return links;
     }
 
     public ArrayList<Station> get_stations (string resource) throws DataError {
+        return get_(resource).stations;
         var response = get_resource(resource);
         var stations = new ArrayList<Station> ();
         response.body.foreach_element ((array, index, element) => {

@@ -14,7 +14,7 @@ public class Tuner.RadioTimesController : Object {
         } catch (RadioTimes.DataError e) {
             critical (@"RadioTimes unavailable");
         }
-        
+
         this.store = store;
 
         // migrate from <= 1.2.3 settings to json based store
@@ -76,25 +76,27 @@ public class Tuner.StationSource2 : Object {
         if(_url == null)
             return _client.search (_params, _page_size + 1, _offset);
         else
-            return _client.get_stations (_url);
+            return _client.get_ (_url).stations;
     }
 
     public ArrayList<Model.Station>? next () throws SourceError {
         stdout.printf(@"NEXT $_url\n");
+
         // Fetch one more to determine if source has more items than page size 
         try {
-            var raw_stations = get_stations ();
-            stdout.printf(@"RAW $(raw_stations.size)\n");
-            // TODO Place filter here?
-            //var filtered_stations = raw_stations.filter (filterByCountry);
-            var filtered_stations = raw_stations.iterator ();
-            var stations = convert_stations (filtered_stations);
-            _offset += _page_size;
-            _more = stations.size > _page_size;
-            if (_more) stations.remove_at( (int)_page_size);
+            // var raw_stations = get_stations ();
+            var links = _client.get_ (_url).links;
+            var stations = convert_links (links.iterator ());
+            return stations;
+            
+            // var filtered_stations = raw_stations.iterator ();
+            // var stations = convert_stations (filtered_stations);
+            // _offset += _page_size;
+            // _more = stations.size > _page_size;
+            // if (_more) stations.remove_at( (int)_page_size);
 
-            stdout.printf(@"NEXT $(stations.size)\n");
-            return stations;    
+            // stdout.printf(@"NEXT $(stations.size)\n");
+            // return stations;
         } catch (RadioTimes.DataError e) {
             stdout.printf(@"ERROR $(e.message)\n");
             throw new SourceError.UNAVAILABLE("Directory Error");
@@ -103,6 +105,21 @@ public class Tuner.StationSource2 : Object {
 
     public bool has_more () {
         return _more;
+    }
+
+    private ArrayList<Model.Station> convert_links (Iterator<RadioTimes.Link> raw_links) {
+        var stations = new ArrayList<Model.Station> ();
+        while (raw_links.next()) {
+            var link = raw_links.get ();
+            var s = new Model.Station ("0", link.text, "", link.URL);
+            s.favicon_url = "";
+            s.clickcount = 0;
+            s.homepage = "homepage";
+            s.codec = "category";
+            s.bitrate = 0;
+            stations.add (s);
+        }
+        return stations;
     }
 
     private ArrayList<Model.Station> convert_stations (Iterator<RadioTimes.Station> raw_stations) {

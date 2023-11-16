@@ -347,14 +347,14 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             var ds = _radiotimes.load_by_url (cat.URL, 100);
             cb.realize.connect (() => {
                 try {
-                    var slist1 = new StationList.with_stations (ds.next ());
+                    var slist1 = new StationList.with_stations (ds.next());
                     slist1.selection_changed.connect (handle_station_click);
                     slist1.favourites_changed.connect (handle_favourites_changed);
                     cb.content = slist1;
                 } catch (SourceError e) {
                     cb.show_alert ();
                 }
-            });                
+            });
         }
 
         headerbar.star_clicked.connect ( (starred) => {
@@ -404,7 +404,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
                     }
                 } catch (SourceError e) {
                     c5.show_alert ();
-                }    
+                }
             }
         });
 
@@ -494,10 +494,13 @@ public class Tuner.Window : Gtk.ApplicationWindow {
     public void handle_station_click (Tuner.Model.Station station) {
         info (@"handle station click for $(station.title)");
         _directory.count_station_click (station);
-        player.station = station;
+        if(station.bitrate > 0) {
 
-        warning (@"storing last played station: $(station.id)");
-        settings.set_string("last-played-station", station.id);
+            player.station = station;
+
+            warning (@"storing last played station: $(station.id)");
+            settings.set_string("last-played-station", station.id);
+        } 
 
         set_title (WindowName+": "+station.title);
     }
@@ -523,7 +526,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         action.set_state (new_state);
         settings.set_boolean ("auto-play", new_state);
         debug (@"on_action_enable_autoplay: $new_state");
-    }    
+    }
 
     public void handleplayer_state_changed (Gst.PlayerState state) {
         switch (state) {
