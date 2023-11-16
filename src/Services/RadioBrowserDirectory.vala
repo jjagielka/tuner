@@ -191,7 +191,6 @@ public class Client : Object {
 
     public ArrayList<Station> get_stations (string resource) throws DataError {
         debug (@"RB $resource");
-        stdout.printf (@"org RB $resource");
 
         var message = new Soup.Message ("GET", @"$current_server/$resource");
         Json.Node rootnode;

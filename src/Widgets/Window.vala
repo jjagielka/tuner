@@ -131,6 +131,10 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         var genres_category = new Granite.Widgets.SourceList.ExpandableItem (_("Genres"));
         genres_category.collapsible = true;
         genres_category.expanded = true;
+
+        var radio_times_category = new Granite.Widgets.SourceList.ExpandableItem (_("Radio Times"));
+        radio_times_category.collapsible = true;
+        radio_times_category.expanded = true;
         
         source_list = new Granite.Widgets.SourceList ();
         
@@ -331,6 +335,28 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             });
         }
 
+        // Radio Times
+        foreach (var cat in _radiotimes.categories ()) {
+            var item = new Granite.Widgets.SourceList.Item (_(cat.text));
+            item.icon = new ThemedIcon ("playlist-symbolic");
+            radio_times_category.add (item);
+
+            var cb = create_content_box (cat.text, item, 
+                cat.text, null, null, stack, source_list);
+
+            var ds = _radiotimes.load_by_url (cat.URL, 100);
+            cb.realize.connect (() => {
+                try {
+                    var slist1 = new StationList.with_stations (ds.next ());
+                    slist1.selection_changed.connect (handle_station_click);
+                    slist1.favourites_changed.connect (handle_favourites_changed);
+                    cb.content = slist1;
+                } catch (SourceError e) {
+                    cb.show_alert ();
+                }
+            });                
+        }
+
         headerbar.star_clicked.connect ( (starred) => {
             player.station.toggle_starred ();
         });
@@ -346,6 +372,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         source_list.root.add (selections_category);
         source_list.root.add (searched_category);
         source_list.root.add (genres_category);
+        source_list.root.add (radio_times_category);
 
         source_list.ellipsize_mode = Pango.EllipsizeMode.NONE;
         source_list.selected = source_list.get_first_child (selections_category);
@@ -365,12 +392,8 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             if (text.length > 0) {
                 string mytext = text;
                 var s5 = _directory.load_search_stations (mytext, 100); 
-                // KUBA
-                stdout.printf(@"Search: $text\n");
-                var test = _radiotimes.load_search_stations (mytext, 100);
-                // KUBA
                 try {
-                    var stations = test.next ();
+                    var stations = s5.next ();
                     if (stations == null || stations.size == 0) {
                         c5.show_nothing_found ();
                     } else {

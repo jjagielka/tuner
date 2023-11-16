@@ -3,6 +3,13 @@
  * SPDX-FileCopyrightText: 2023 Jakub Jagielka <jjagielka@gmail.com>
  */
 
+ /*
+Found docs:
+
+http://0john.blogspot.com/2011/06/opml-inside-radiotime.html
+
+*/
+
 using Gee;
 
 namespace Tuner.RadioTimes {
@@ -15,6 +22,8 @@ public errordomain DataError {
 public struct SearchParams {
     string query;
 }
+
+
 
 public class StationRaw : Object {
     public string element { get; set; }  // "outline",
@@ -34,6 +43,33 @@ public class StationRaw : Object {
     public string image { get; set; }  // "http://cdn-profiles.tunein.com/s159857/images/logoq.jpg",
     public string now_playing_id { get; set; }  // "s159857",
     public string preset_id { get; set; }  // "s159857"    
+}
+
+// JSON STUCTURES
+private class ResponseHead : Object {
+    public string title { get; set; }
+    public string status { get; set; }
+}
+
+private class Response : Object {
+    public ResponseHead head { get; set; }
+    public Json.Array body { get; set; }
+
+    public string to_string () {
+        return @"$(head.status): $(head.title) - $(body.get_length())";
+    }
+}
+
+public class Link : Object {
+    public string element { get; set; }  // "outline",
+    //  public string type { get; set; }  // "link",
+    public string text { get; set; }  // "Lokalne Radio",
+    public string URL { get; set; }  // "http://opml.radiotime.com/Browse.ashx?c=local",
+    public string key { get; set; }  // "local"
+
+    public string to_string () {
+        return @"Link: $text: $URL";
+    }    
 }
 
 public class Station : Object {
@@ -142,14 +178,15 @@ public class Client : Object {
         // TODO: Implement server rotation on error    
     }
 
-    public ArrayList<Station> get_stations (string resource) throws DataError {
+    private Response get_resource (string resource) throws DataError {
         debug (@"RB $resource");
-
-        var message = new Soup.Message ("GET", @"$current_server/$resource");
+        stdout.printf (@"RB $resource");
+        
+        var message = new Soup.Message ("GET", @"$current_server/$resource&render=json");
         Json.Node rootnode;
 
         var response_code = _session.send_message (message);
-        debug (@"response from radio-browser.info: $response_code");
+        debug (@"response from radio-time.com: $response_code");
 
         var body = (string) message.response_body.data;
         stdout.printf(body);
@@ -162,26 +199,33 @@ public class Client : Object {
         } catch (Error e) {
             throw new DataError.PARSE_DATA (@"unable to parse JSON response: $(e.message)");
         }
-        var rootarray = rootnode.get_object().get_member("body").get_array ();
+        var node = rootnode.get_object();
 
-        var stations = jarray_to_stations (rootarray);
-        return stations;
+        return new Response() {
+            head = Json.gobject_deserialize (typeof (ResponseHead), node.get_member("head")) as ResponseHead,
+            body = node.get_member("body").get_array ()
+        };
     }
 
-    private StationRaw jnode_to_station (Json.Node node) {
-        return Json.gobject_deserialize (typeof (StationRaw), node) as StationRaw;
-    }
+    public ArrayList<Link> get_links (string resource) throws DataError {
+        var response = get_resource(resource);
+        var links = new ArrayList<Link> ();
 
-    private ArrayList<Station> jarray_to_stations (Json.Array data) {
-        var stations = new ArrayList<Station> ();
-
-        data.foreach_element ((array, index, element) => {
-            if(element.get_object().get_member("type").get_string() == "audio") {
-                StationRaw s = jnode_to_station (element);
-                stations.add (new Station(s));
-            }
+        response.body.foreach_element ((array, index, element) => {
+            //if(element.get_object().get_member("type").get_string() == "link") {}
+            links.add (Json.gobject_deserialize (typeof (Link), element) as Link);
         });
+        return links;    
+    }
 
+    public ArrayList<Station> get_stations (string resource) throws DataError {
+        var response = get_resource(resource);
+        var stations = new ArrayList<Station> ();
+        response.body.foreach_element ((array, index, element) => {
+            //  if(element.get_object().get_member("type").get_string() == "audio") {}
+            StationRaw s = Json.gobject_deserialize (typeof (StationRaw), element) as StationRaw;
+            stations.add (new Station(s));
+        });
         return stations;
     }
 
@@ -203,7 +247,7 @@ public class Client : Object {
 
         // by text or tags
         //  var resource = @"json/stations/search?limit=$rowcount&order=$(params.order)&offset=$offset";
-        var resource = @"Search.ashx?render=json&call=stream";
+        var resource = @"Search.ashx?render=json&filter=c";
         if (params.query != null && params.query != "") { 
             resource += @"&query=$(params.query)";
         }

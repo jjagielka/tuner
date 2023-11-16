@@ -6,6 +6,7 @@ sources = files (
 
     'Models/Countries.vala',
     'Models/Genre.vala',
+    'Models/RadioTimes.vala',
     'Models/Station.vala',
     'Models/StationStore.vala',
 

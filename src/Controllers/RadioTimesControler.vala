@@ -1,4 +1,5 @@
 
+
 using Gee;
 
 
@@ -25,37 +26,65 @@ public class Tuner.RadioTimesController : Object {
         var params = RadioTimes.SearchParams() {
             query    = utext
         };
-        var source = new StationSource2(limit, params, provider, store); 
+        var source = new StationSource2(limit, params, provider, store, null); 
         // var rsp = source.next();
         // stdout.printf(@"load_search_stations: $(rsp.size)\n");
         return source;
+    } 
+
+    public StationSource2 load_by_url (owned string url, uint limit) {
+        Soup.URI uri = new Soup.URI (url);
+        return new StationSource2(limit, null, provider, store, @"$(uri.get_path())?$(uri.get_query())".substring(1)); 
     }
+
+    public ArrayList<RadioTimes.Link> categories () {
+        try {
+            return provider.get_links("Browse.ashx?render=json");
+        } catch (RadioTimes.DataError e) {
+            critical (@"RadioTimes unavailable");
+            return new ArrayList<RadioTimes.Link>();
+        }
+    }
+
 }
 
 public class Tuner.StationSource2 : Object {
     private uint _offset = 0;
     private uint _page_size = 20;
     private bool _more = true;
-    private RadioTimes.SearchParams _params;
+    private string? _url = null;
+
+    private RadioTimes.SearchParams? _params;
     private RadioTimes.Client _client;
     private Model.StationStore _store;
 
     public StationSource2 (uint limit, 
-                          RadioTimes.SearchParams params, 
+                          RadioTimes.SearchParams? params, 
                           RadioTimes.Client client,
-                          Model.StationStore store) {
+                          Model.StationStore store,
+                          string? url) {
         Object ();
         // This disables paging for now
         _page_size = limit;
         _params = params;
         _client = client;
         _store = store;
+        _url = url;
+    }
+
+    private ArrayList<RadioTimes.Station> get_stations ()  throws RadioTimes.DataError {
+        if(_url == null)
+            return _client.search (_params, _page_size + 1, _offset);
+        else
+            return _client.get_stations (_url);
     }
 
     public ArrayList<Model.Station>? next () throws SourceError {
+        stdout.printf(@"NEXT $_url\n");
         // Fetch one more to determine if source has more items than page size 
         try {
-            var raw_stations = _client.search (_params, _page_size + 1, _offset);
+            var raw_stations = get_stations ();
+            stdout.printf(@"RAW $(raw_stations.size)\n");
             // TODO Place filter here?
             //var filtered_stations = raw_stations.filter (filterByCountry);
             var filtered_stations = raw_stations.iterator ();
@@ -63,8 +92,11 @@ public class Tuner.StationSource2 : Object {
             _offset += _page_size;
             _more = stations.size > _page_size;
             if (_more) stations.remove_at( (int)_page_size);
+
+            stdout.printf(@"NEXT $(stations.size)\n");
             return stations;    
         } catch (RadioTimes.DataError e) {
+            stdout.printf(@"ERROR $(e.message)\n");
             throw new SourceError.UNAVAILABLE("Directory Error");
         }
     }

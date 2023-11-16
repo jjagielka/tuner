@@ -62,8 +62,6 @@ string http_get(string url) {
     var message = new Soup.Message ("GET", url);    
 
     session.send_message (message);
-    var body = (string) message.response_body.data;
+    return (string) message.response_body.data;
     //  stdout.printf(body);
-
-    return body.split("\n")[0];
 }
