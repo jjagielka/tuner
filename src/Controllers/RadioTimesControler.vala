@@ -37,12 +37,12 @@ public class Tuner.RadioTimesController : Object {
         return new StationSource2(limit, null, provider, store, @"$(uri.get_path())?$(uri.get_query())".substring(1)); 
     }
 
-    public ArrayList<RadioTimes.Link> categories () {
+    public ArrayList<Model.Item> categories () {
         try {
-            return provider.get_links("Browse.ashx?render=json");
+            return provider.get_stations("Browse.ashx?render=json");
         } catch (RadioTimes.DataError e) {
             critical (@"RadioTimes unavailable");
-            return new ArrayList<RadioTimes.Link>();
+            return new ArrayList<Model.Item>();
         }
     }
 
@@ -72,21 +72,19 @@ public class Tuner.StationSource2 : Object {
         _url = url;
     }
 
-    private ArrayList<RadioTimes.Station> get_stations ()  throws RadioTimes.DataError {
-        if(_url == null)
-            return _client.search (_params, _page_size + 1, _offset);
-        else
-            return _client.get_ (_url).stations;
-    }
+    // private ArrayList<Model.Station> get_stations ()  throws RadioTimes.DataError {
+    //     if(_url == null)
+    //         return _client.search (_params, _page_size + 1, _offset);
+    //     else
+    //         return _client.get_ (_url).stations;
+    // }
 
-    public ArrayList<Model.Station>? next () throws SourceError {
+    public ArrayList<Model.Item>? next () throws SourceError {
         stdout.printf(@"NEXT $_url\n");
 
         // Fetch one more to determine if source has more items than page size 
         try {
-            // var raw_stations = get_stations ();
-            var links = _client.get_ (_url).links;
-            var stations = convert_links (links.iterator ());
+            var stations = _client.get_stations (_url);
             return stations;
             
             // var filtered_stations = raw_stations.iterator ();
@@ -107,6 +105,7 @@ public class Tuner.StationSource2 : Object {
         return _more;
     }
 
+    /*
     private ArrayList<Model.Station> convert_links (Iterator<RadioTimes.Link> raw_links) {
         var stations = new ArrayList<Model.Station> ();
         while (raw_links.next()) {
@@ -155,4 +154,5 @@ public class Tuner.StationSource2 : Object {
         }
         return stations;
     }
+    */
 }

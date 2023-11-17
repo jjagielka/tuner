@@ -7,22 +7,25 @@ using Gee;
 
 public class Tuner.StationList : AbstractContentList {
 
-    public signal void selection_changed (Model.Station station);
+    public signal void selection_changed (Model.Item station);
     public signal void station_count_changed (uint count);
     public signal void favourites_changed ();
 
-    public Model.Station selected_station;
-    
-    public ArrayList<Model.Station> stations {
+    public Model.Item selected_station;
+
+    public ArrayList<Model.Item> stations {
         set construct {
             clear ();
             if (value == null) return;
-            
+
             foreach (var s in value) {
-                s.notify["starred"].connect ( () => {
-                    favourites_changed ();
-                });
-                var box = new StationBox (s);
+                if (s is Model.Station) {
+                    s.notify["starred"].connect ( () => {
+                        favourites_changed ();
+                    });
+                }
+                var item = s as Model.Item;
+                var box = new StationBox (item);
                 box.clicked.connect (() => {
                     selection_changed (box.station);
                     selected_station = box.station;
@@ -46,7 +49,7 @@ public class Tuner.StationList : AbstractContentList {
         );
     }
 
-    public StationList.with_stations (Gee.ArrayList<Model.Station> stations) {
+    public StationList.with_stations (Gee.ArrayList<Model.Item> stations) {
         this ();
         this.stations = stations;
     }

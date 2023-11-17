@@ -40,23 +40,30 @@ private class Response : Object {
     }
 }
 
-public class Link : Object {
+public abstract class Element : Object {
     public string element { get; set; }  // "outline",
     //  public string type { get; set; }  // "link",
     public string text { get; set; }  // "Lokalne Radio",
     public string URL { get; set; }  // "http://opml.radiotime.com/Browse.ashx?c=local",
+    public abstract Model.Item to_model();
+}
+
+public class Link : Element {
     public string key { get; set; }  // "local"
 
     public string to_string () {
         return @"Link: $text: $URL";
     }
+
+    public override Model.Item to_model () {
+        var item = new Model.Item();
+        item.title = text;
+        item.url = URL;
+        return item;
+    }
 }
 
-public class StationRaw : Object {
-    public string element { get; set; }  // "outline",
-    //  public string type { get; set; }  // "audio",
-    public string text { get; set; }  // "NME 1",
-    public string URL { get; set; }  // "http://opml.radiotime.com/Tune.ashx?id=s159857",
+public class StationRaw : Element {
     public string bitrate { get; set; }  // "256",
     public string reliability { get; set; }  // "99",
     public string guide_id { get; set; }  // "s159857",
@@ -69,14 +76,15 @@ public class StationRaw : Object {
     public string image { get; set; }  // "http://cdn-profiles.tunein.com/s159857/images/logoq.jpg",
     public string now_playing_id { get; set; }  // "s159857",
     public string preset_id { get; set; }  // "s159857"
-}
 
-public class RadioTimesArrayList : Object {
-    public ArrayList<Link> links { get; set; }
-    public ArrayList<Station> stations { get; set; }
-    construct {
-        links = new ArrayList<Link>();
-        stations = new ArrayList<Station>();
+    public override Model.Item to_model() {
+        var station = new Model.Station(preset_id, text, "FR", URL);
+        station.homepage = "homepage";
+        station.codec = formats;
+        station.bitrate = int.parse(bitrate);
+
+        station.clickcount = 0;
+        return station as Model.Item;
     }
 }
 
@@ -215,54 +223,30 @@ public class Client : Object {
         };
     }
 
-    public RadioTimesArrayList get_ (string resource) throws DataError {
-        RadioTimesArrayList result = new RadioTimesArrayList();
+    public ArrayList<Model.Item> get_stations (string resource) throws DataError {
+        ArrayList<Model.Item> result = new ArrayList<Model.Item>();
         var response = get_resource(resource);
         response.body.foreach_element ((array, index, element) => {
+            Element? obj;
             switch (element.get_object().get_member("type").get_string())
             {
                 case "link":
-                    result.links.add (Json.gobject_deserialize (typeof (Link), element) as Link);
+                    obj = Json.gobject_deserialize (typeof (Link), element) as Element;
                     break;
                 case "audio":
-                    result.stations.add (new Station(Json.gobject_deserialize (typeof (StationRaw), element) as StationRaw));
+                    obj = Json.gobject_deserialize (typeof (Station), element) as Element;
                     break;
                 default:
+                    obj = null;
                     break;
             };
+            if (obj != null) result.add (obj.to_model());
         });
 
         return result;
     }
 
-    public ArrayList<Link> get_links (string resource) throws DataError {
-        return get_(resource).links;
-        // var response = get_resource(resource);
-        // var links = new ArrayList<Link> ();
-
-        // response.body.foreach_element ((array, index, element) => {
-        //     var a = 
-        //     //if(element.get_object().get_member("type").get_string() == "link") {}
-        //     // Link link = Json.gobject_deserialize (typeof (Link), element) as Link;
-        //     Link link = new Link(element.get_object());
-        //     links.add (link);
-        // });
-        // return links;
-    }
-
-    public ArrayList<Station> get_stations (string resource) throws DataError {
-        return get_(resource).stations;
-        var response = get_resource(resource);
-        var stations = new ArrayList<Station> ();
-        response.body.foreach_element ((array, index, element) => {
-            //  if(element.get_object().get_member("type").get_string() == "audio") {}
-            StationRaw s = Json.gobject_deserialize (typeof (StationRaw), element) as StationRaw;
-            stations.add (new Station(s));
-        });
-        return stations;
-    }
-
-    public ArrayList<Station> search (SearchParams params,
+    public ArrayList<Model.Item> search (SearchParams params,
                                     uint rowcount,
                                     uint offset = 0) throws DataError {
         // by uuids

@@ -337,14 +337,14 @@ public class Tuner.Window : Gtk.ApplicationWindow {
 
         // Radio Times
         foreach (var cat in _radiotimes.categories ()) {
-            var item = new Granite.Widgets.SourceList.Item (_(cat.text));
+            var item = new Granite.Widgets.SourceList.Item (_(cat.title));
             item.icon = new ThemedIcon ("playlist-symbolic");
             radio_times_category.add (item);
 
-            var cb = create_content_box (cat.text, item, 
-                cat.text, null, null, stack, source_list);
+            var cb = create_content_box (cat.title, item,
+                cat.title, null, null, stack, source_list);
 
-            var ds = _radiotimes.load_by_url (cat.URL, 100);
+            var ds = _radiotimes.load_by_url (cat.url, 100);
             cb.realize.connect (() => {
                 try {
                     var slist1 = new StationList.with_stations (ds.next());
@@ -491,10 +491,12 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         dialog.present ();
     }
 
-    public void handle_station_click (Tuner.Model.Station station) {
-        info (@"handle station click for $(station.title)");
-        _directory.count_station_click (station);
-        if(station.bitrate > 0) {
+    public void handle_station_click (Tuner.Model.Item item) {
+        info (@"handle item click for $(item.title)");
+        if (item is Model.Station) {
+            var station = item as Model.Station;
+            _directory.count_station_click (station);
+
 
             player.station = station;
 
@@ -502,7 +504,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             settings.set_string("last-played-station", station.id);
         } 
 
-        set_title (WindowName+": "+station.title);
+        set_title (WindowName+": "+item.title);
     }
 
     public void handle_favourites_changed () {

@@ -5,10 +5,10 @@
 
 public class Tuner.StationBox : Tuner.WelcomeButton {
 
-    public Model.Station station { get; construct; }
+    public Model.Item station { get; construct; }
     public StationContextMenu menu { get; private set; }
 
-    public StationBox (Model.Station station) {
+    public StationBox (Model.Item station) {
         Object (
             description: make_description (station.location),
             title: make_title (station.title, station.starred),
