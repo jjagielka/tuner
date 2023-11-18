@@ -18,14 +18,12 @@ public class Tuner.StationList : AbstractContentList {
             clear ();
             if (value == null) return;
 
-            info(@"STATTION LIST SIZE $(value.size)");
             foreach (var s in value) {
                 if (s is Model.Station) {
                     s.notify["starred"].connect ( () => {
                         favourites_changed ();
                     });
                 }
-                info(@"STATTION LIST item: $s");
                 var item = s as Model.Item;
                 if(item is Model.Station){
                     var box = new StationBox (item as Model.Station);
@@ -34,9 +32,15 @@ public class Tuner.StationList : AbstractContentList {
                         selected_station = box.station;
                     });
                     add (box);
+                } else if(item is Model.RTStation){
+                    var box = new StationBox (item as Model.Station);
+                    box.clicked.connect (() => {
+                        selection_changed (box.station);
+                        selected_station = box.station;
+                    });
+                    add (box);
                 }
                 else {
-                    info(@"STATTION LIST ITEM: $(item.title)");
                     var box = new ItemBox (item);
                     
                     box.clicked.connect (() => {

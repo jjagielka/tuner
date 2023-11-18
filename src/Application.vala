@@ -44,6 +44,14 @@ public class Tuner.Application : Gtk.Application {
         ensure_dir (data_dir);
 
         add_action_entries(ACTION_ENTRIES, this);
+        //  Log.set_handler(null, LogLevelFlags.LEVEL_INFO, Log.default_handler);
+        Log.set_default_handler(handler);
+    }
+
+    void handler(string? log_domain, LogLevelFlags log_levels, string message) {
+        if(log_levels < LogLevelFlags.LEVEL_DEBUG) {
+            Log.default_handler(log_domain, log_levels, message);
+        }
     }
 
     public static Application _instance = null;

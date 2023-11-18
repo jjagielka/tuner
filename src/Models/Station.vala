@@ -22,18 +22,11 @@
     }    
 }
 
-public delegate string Resolve(string x);
-
 public class Tuner.Model.Station : Item {
     public string codec { get; set; }
     public int bitrate { get; set; }
 
     public uint clickcount = 0;
-
-
-    private string _url;
-    private string _url_resolved = null;
-    public Resolve resolve = (x) => { return x; };
 
     public Station (string id, string title, string location, string url) {
         Object ();
@@ -45,20 +38,7 @@ public class Tuner.Model.Station : Item {
         this.starred = starred;
     } 
 
-    public override string url {
-        get {
-            if(_url_resolved == null)
-                _url_resolved = resolve(_url);
-            return _url_resolved;
-        }
-        set {
-            _url = value;
-            _url_resolved = null;
-        }
-    }
-
     public override string to_string() {
         return @"[$(this.id)] $(this.title)";
     }
-
 }

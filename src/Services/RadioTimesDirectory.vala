@@ -111,7 +111,7 @@ public class Station : Element {
     public string guide_id { get; set; }  // "s159857",
 
     public override Model.Item to_model() {
-        var station = new Model.Station(preset_id, text, "FR", URL);
+        var station = new Model.RTStation(preset_id, text, "FR", URL);
         station.homepage = "";
         station.codec = formats;
         station.bitrate = int.parse(bitrate);

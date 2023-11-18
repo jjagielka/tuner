@@ -503,18 +503,20 @@ public class Tuner.Window : Gtk.ApplicationWindow {
     public void handle_station_or_link_click (Tuner.Model.Item item) {
         if (item is Model.Station) {
             handle_station_click(item as Model.Station);
-        } else {
+        }
+        else {
             var cb = stack.visible_child as ContentBox;
-            var slist1 = cb.content as StationList;
+            var slist = cb.content as StationList;
+            
             if(item.children == null) {
                 var ds = _radiotimes.load_by_url (item.url, 100);
-                slist1.stations = ds.next();
+                slist.stations = ds.next();
             } else {
-                slist1.stations = item.children;
+                slist.stations = item.children;
             }
 
             cb.header_label.set_label(@"$(cb.header_label.label) - $(item.title)");
-            slist1.show_all();
+            slist.show_all();
         }
     }
 

@@ -21,20 +21,20 @@ public class Tuner.RadioTimesController : Object {
         //  this.migrate_favourites ();
     }
 
-    public StationSource2 load_search_stations (owned string utext, uint limit) {
+    public RTStationSource load_search_stations (owned string utext, uint limit) {
         stdout.printf(@"load_search_stations: $utext\n");
         var params = RadioTimes.SearchParams() {
             query    = utext
         };
-        var source = new StationSource2(limit, params, provider, store, null); 
+        var source = new RTStationSource(limit, params, provider, store, null); 
         // var rsp = source.next();
         // stdout.printf(@"load_search_stations: $(rsp.size)\n");
         return source;
     } 
 
-    public StationSource2 load_by_url (owned string url, uint limit) {
+    public RTStationSource load_by_url (owned string url, uint limit) {
         Soup.URI uri = new Soup.URI (url);
-        return new StationSource2(limit, null, provider, store, @"$(uri.get_path())?$(uri.get_query())".substring(1)); 
+        return new RTStationSource(limit, null, provider, store, @"$(uri.get_path())?$(uri.get_query())".substring(1)); 
     }
 
     public ArrayList<Model.Item> categories () {
@@ -48,7 +48,7 @@ public class Tuner.RadioTimesController : Object {
 
 }
 
-public class Tuner.StationSource2 : Object {
+public class Tuner.RTStationSource : Object {
     private uint _offset = 0;
     private uint _page_size = 20;
     private bool _more = true;
@@ -58,7 +58,7 @@ public class Tuner.StationSource2 : Object {
     private RadioTimes.Client _client;
     private Model.StationStore _store;
 
-    public StationSource2 (uint limit, 
+    public RTStationSource (uint limit, 
                           RadioTimes.SearchParams? params, 
                           RadioTimes.Client client,
                           Model.StationStore store,
@@ -71,13 +71,6 @@ public class Tuner.StationSource2 : Object {
         _store = store;
         _url = url;
     }
-
-    // private ArrayList<Model.Station> get_stations ()  throws RadioTimes.DataError {
-    //     if(_url == null)
-    //         return _client.search (_params, _page_size + 1, _offset);
-    //     else
-    //         return _client.get_ (_url).stations;
-    // }
 
     public ArrayList<Model.Item>? next () throws SourceError {
         stdout.printf(@"NEXT $_url\n");
@@ -104,55 +97,4 @@ public class Tuner.StationSource2 : Object {
     public bool has_more () {
         return _more;
     }
-
-    /*
-    private ArrayList<Model.Station> convert_links (Iterator<RadioTimes.Link> raw_links) {
-        var stations = new ArrayList<Model.Station> ();
-        while (raw_links.next()) {
-            var link = raw_links.get ();
-            var s = new Model.Station ("0", link.text, "", link.URL);
-            s.favicon_url = "";
-            s.clickcount = 0;
-            s.homepage = "homepage";
-            s.codec = "category";
-            s.bitrate = 0;
-            stations.add (s);
-        }
-        return stations;
-    }
-
-    private ArrayList<Model.Station> convert_stations (Iterator<RadioTimes.Station> raw_stations) {
-        var stations = new ArrayList<Model.Station> ();
-
-        while (raw_stations.next()) {
-        // foreach (var station in raw_stations) {
-            var station = raw_stations.get ();
-            var s = new Model.Station (
-                station.stationuuid,
-                station.name,
-                Model.Countries.get_by_code(station.countrycode, station.country),
-                station.url_resolved);
-            if (_store.contains (s)) {
-                s.starred = true;
-            }
-
-            stdout.printf(@"RAW $(station.stationuuid), $(station.name), $(Model.Countries.get_by_code(station.countrycode, station.country)), $(station.bitrate)\n");
-            s.favicon_url = station.favicon;
-            s.clickcount = station.clickcount;
-            s.homepage = station.homepage;
-            s.codec = station.codec;
-            s.bitrate = station.bitrate;
-
-            s.notify["starred"].connect ( (sender, property) => {
-                if (s.starred) {
-                    _store.add (s);
-                } else {
-                    _store.remove (s);
-                }
-            });
-            stations.add (s);
-        }
-        return stations;
-    }
-    */
 }

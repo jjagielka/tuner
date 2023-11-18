@@ -7,6 +7,7 @@ sources = files (
     'Models/Countries.vala',
     'Models/Genre.vala',
     'Models/Station.vala',
+    'Models/RTStation.vala',
     'Models/StationStore.vala',
 
     'Services/DBusMediaPlayer.vala',
@@ -29,6 +30,7 @@ sources = files (
     'Widgets/WelcomeButton.vala',
     'Widgets/Theme.vala',
     'Widgets/TagsBox.vala',
+    'Widgets/UrlImage.vala',
     'Widgets/CountryList.vala',
     'Widgets/StationList.vala',
     'Widgets/RevealLabel.vala',

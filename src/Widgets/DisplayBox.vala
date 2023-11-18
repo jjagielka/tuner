@@ -9,7 +9,7 @@ public class Tuner.DisplayBox : Gtk.Box {
     private const string DEFAULT_ICON_NAME = "internet-radio-symbolic";
 
     private Gtk.Label _title;
-    private Gtk.Image _favicon_image;
+    private UrlImage _favicon_image;
     private Gtk.Label _station_name_label;
 
     private Gtk.Label _organization;
@@ -34,7 +34,7 @@ public class Tuner.DisplayBox : Gtk.Box {
         
         var hBox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 12);
         
-        _favicon_image = new Gtk.Image.from_icon_name (DEFAULT_ICON_NAME, Gtk.IconSize.DIALOG);
+        _favicon_image = new UrlImage(DEFAULT_ICON_NAME);
         hBox.pack_start(_favicon_image);
         
         _title = new Gtk.Label(_("Playing"));
@@ -52,7 +52,7 @@ public class Tuner.DisplayBox : Gtk.Box {
 
     public void update_from_station(Model.Station station) {
         _station_name_label.set_label(station.title);
-        load_favicon (_favicon_image, station.favicon_url, DEFAULT_ICON_NAME);
+        _favicon_image.url = station.favicon_url;
     }
 
     public void update_from_info(Gst.PlayerMediaInfo info) {

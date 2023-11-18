@@ -8,7 +8,7 @@
     Gtk.Label button_title;
     Gtk.Label button_tag;
     Gtk.Label button_description;
-    Gtk.Image? _icon;
+    UrlImage? _icon;
     Gtk.Grid button_grid;
 
     public string title {
@@ -32,7 +32,7 @@
         }
     }
 
-    public Gtk.Image? icon {
+    public UrlImage? icon {
         get { return _icon; }
         set {
             if (_icon != null) {
@@ -49,11 +49,11 @@
     }
 
     /*
-    public WelcomeButton (Gtk.Image? image, string title, string description) {
+    public WelcomeButton (UrlImage? image, string title, string description) {
         Object (title: title, description: description, icon: image);
     }
 
-    public WelcomeButton.with_tag (Gtk.Image? image, string title, string description, string tag) {
+    public WelcomeButton.with_tag (UrlImage? image, string title, string description, string tag) {
         Object (title: title, description: description, icon: image, tag: tag);
     }
 */
