@@ -523,7 +523,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
     public void handle_station_click (Tuner.Model.Item item) {
         assert (item is Model.Station);
         var station = item as Model.Station;
-        info (@"handle item click for $(station.title)");
+
         _directory.count_station_click (station);
 
         player.station = station;

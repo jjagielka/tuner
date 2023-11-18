@@ -13,7 +13,6 @@ public class Tuner.ItemBox : Tuner.WelcomeButton {
             description: make_description (""),
             title: station.title, // make_title (station.title, station.starred),
             tag: "Category",
-            icon: new UrlImage("internet-radio"),
             station: station
         );
     }
@@ -25,7 +24,7 @@ public class Tuner.ItemBox : Tuner.WelcomeButton {
             this.title = make_title (this.station.title, this.station.starred);
         });
 
-        // TODO Use a AsyncQueue with limited threads
+        icon = new UrlImage("internet-radio");
         icon.url = station.favicon_url;
 
         event.connect ((e) => {

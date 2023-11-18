@@ -126,9 +126,13 @@ public class Station : Element {
     private string resolve(string url) {
         var session = new Soup.Session ();
         var message = new Soup.Message ("GET", url);
-        var response = session.send_message(message);
-        var body = (string) message.response_body.data;
-        return body.split("\n")[0];
+        var response_code = session.send_message(message);
+        if(response_code == 200) {
+            var body = (string) message.response_body.data;
+            return body.split("\n")[0];
+        }
+        debug (@"response: $(response_code)");
+        return "";
     }
 }
 
@@ -237,7 +241,6 @@ public class Client : Object {
     public ArrayList<Model.Item> get_stations (string resource) throws DataError {
         ArrayList<Model.Item> result = new ArrayList<Model.Item>();
         var response = get_resource(resource);
-        info(@"RESP: $response");
 
         response.body.foreach_element ((array, index, element) => {
             Element? obj = deserialize(element);

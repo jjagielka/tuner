@@ -20,11 +20,11 @@ public class Tuner.UrlImage : Gtk.Image {
     public string url {
         set {
             if(value == "") return;
-            if(_cache_file != "" && read_from_cache()){
-                return;
-            }
+            
             _url = value;
-            load_from_url();
+
+            if(!read_from_cache())
+                load_from_url();
         }
         get {
             return _url;
@@ -51,8 +51,7 @@ public class Tuner.UrlImage : Gtk.Image {
     
             var data_stream = new MemoryInputStream.from_data (mess.response_body.data);
         
-            warning (@"about to dispaly: %s", url);
-            if(set_favicon_from_stream(data_stream) && _cache_file != "") {
+            if(set_favicon_from_stream(data_stream)) {
                 write_to_cache();
             }
         });
@@ -76,6 +75,9 @@ public class Tuner.UrlImage : Gtk.Image {
     }
 
     private bool read_from_cache () {
+        if(_cache_file == null)
+            return false;
+
         if (FileUtils.test (_cache_file, FileTest.EXISTS | FileTest.IS_REGULAR)) {
             var file = File.new_for_path (_cache_file);
             try {
@@ -92,19 +94,20 @@ public class Tuner.UrlImage : Gtk.Image {
         return false;
     }
 
-    private bool write_to_cache () {      
+    private void write_to_cache () {     
+        if(_cache_file == null)
+            return;
+        
         var file = File.new_for_path (_cache_file);
         try {
             var stream = file.create_readwrite (FileCreateFlags.PRIVATE);
             pixbuf.save_to_stream (stream.output_stream, "png", null);
             stream.close ();
-            return true;
         } catch (Error e) {
             // File already created by another stationbox
             // TODO: possible race condition
             // TODO: Create stationboxes as singletons?
         }
-        return false;
     }
 
 

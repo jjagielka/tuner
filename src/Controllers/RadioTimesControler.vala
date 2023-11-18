@@ -73,8 +73,6 @@ public class Tuner.RTStationSource : Object {
     }
 
     public ArrayList<Model.Item>? next () throws SourceError {
-        stdout.printf(@"NEXT $_url\n");
-
         // Fetch one more to determine if source has more items than page size 
         try {
             var stations = _client.get_stations (_url);

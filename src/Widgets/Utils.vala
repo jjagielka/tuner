@@ -24,35 +24,3 @@ StringToString TagListGetter (Gst.TagList tagList) {
     };
 }
 
-void load_favicon (Gtk.Image image, string url, string default_icon) {
-    // Set default icon first, in case loading takes long or fails
-    image.set_from_icon_name (default_icon, Gtk.IconSize.DIALOG);
-    if (url.length == 0) {
-        return;
-    }
-
-    var session = new Soup.Session ();
-    var message = new Soup.Message ("GET", url);
-
-    session.queue_message (message, (sess, mess) => {
-        if (mess.status_code != 200) {
-            warning (@"Unexpected status code: $(mess.status_code), will not render $(url)");
-            return;
-        }
-
-        var data_stream = new MemoryInputStream.from_data (mess.response_body.data);
-        Gdk.Pixbuf pxbuf;
-
-        try {
-            pxbuf = new Gdk.Pixbuf.from_stream_at_scale (data_stream, 48, 48, true, null);
-        } catch (Error e) {
-            warning ("Couldn't render image: %s (%s)",
-                url ?? "unknown url",
-                e.message);
-            return;
-        }
-
-        image.set_from_pixbuf (pxbuf);
-        image.set_size_request (48, 48);
-    });
-} 
