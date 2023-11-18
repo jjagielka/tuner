@@ -21,6 +21,7 @@ sources = files (
     'Widgets/FrameBox.vala',
     'Widgets/HeaderBar.vala',
     'Widgets/HeaderLabel.vala',
+    'Widgets/ItemBox.vala',
     'Widgets/StationBox.vala',
     'Widgets/StationContextMenu.vala',
     'Widgets/Window.vala',

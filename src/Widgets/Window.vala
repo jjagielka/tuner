@@ -106,7 +106,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
             return before_destroy ();
         });
 
-        var stack = new Gtk.Stack ();
+        stack = new Gtk.Stack ();
         stack.transition_type = Gtk.StackTransitionType.CROSSFADE;
         
         var data_file = Path.build_filename (Application.instance.data_dir, "favorites.json");
@@ -337,23 +337,32 @@ public class Tuner.Window : Gtk.ApplicationWindow {
 
         // Radio Times
         foreach (var cat in _radiotimes.categories ()) {
-            var item = new Granite.Widgets.SourceList.Item (_(cat.title));
+            var item = new Granite.Widgets.SourceList.ExpandableItem (_(cat.title));
+            searched_category.collapsible = true;
+            searched_category.expanded = false;
+    
             item.icon = new ThemedIcon ("playlist-symbolic");
             radio_times_category.add (item);
 
             var cb = create_content_box (cat.title, item,
-                cat.title, null, null, stack, source_list);
+                cat.title, "media-eject-symbolic", "Back to the root", stack, source_list);
 
             var ds = _radiotimes.load_by_url (cat.url, 100);
             cb.realize.connect (() => {
                 try {
                     var slist1 = new StationList.with_stations (ds.next());
-                    slist1.selection_changed.connect (handle_station_click);
+                    slist1.selection_changed.connect (handle_station_or_link_click);
                     slist1.favourites_changed.connect (handle_favourites_changed);
                     cb.content = slist1;
                 } catch (SourceError e) {
                     cb.show_alert ();
                 }
+            });
+            cb.action_activated.connect(() => {
+                var slist1 = cb.content as StationList;
+                slist1.stations = ds.next();
+                slist1.show_all();
+                cb.header_label.set_label(cat.title);
             });
         }
 
@@ -491,20 +500,36 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         dialog.present ();
     }
 
-    public void handle_station_click (Tuner.Model.Item item) {
-        info (@"handle item click for $(item.title)");
+    public void handle_station_or_link_click (Tuner.Model.Item item) {
         if (item is Model.Station) {
-            var station = item as Model.Station;
-            _directory.count_station_click (station);
+            handle_station_click(item as Model.Station);
+        } else {
+            var cb = stack.visible_child as ContentBox;
+            var slist1 = cb.content as StationList;
+            if(item.children == null) {
+                var ds = _radiotimes.load_by_url (item.url, 100);
+                slist1.stations = ds.next();
+            } else {
+                slist1.stations = item.children;
+            }
 
+            cb.header_label.set_label(@"$(cb.header_label.label) - $(item.title)");
+            slist1.show_all();
+        }
+    }
 
-            player.station = station;
+    public void handle_station_click (Tuner.Model.Item item) {
+        assert (item is Model.Station);
+        var station = item as Model.Station;
+        info (@"handle item click for $(station.title)");
+        _directory.count_station_click (station);
 
-            warning (@"storing last played station: $(station.id)");
-            settings.set_string("last-played-station", station.id);
-        } 
+        player.station = station;
 
-        set_title (WindowName+": "+item.title);
+        warning (@"storing last played station: $(station.id)");
+        settings.set_string("last-played-station", station.id);
+
+        set_title (WindowName+": "+station.title);
     }
 
     public void handle_favourites_changed () {

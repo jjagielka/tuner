@@ -4,9 +4,9 @@
  */
 
 public class Tuner.StationContextMenu : Gtk.Menu {
-    public Model.Station station { get; construct; }
+    public Model.Item station { get; construct; }
 
-    public StationContextMenu (Model.Station station) {
+    public StationContextMenu (Model.Item station) {
         Object (
             station: station
         );
@@ -22,7 +22,7 @@ public class Tuner.StationContextMenu : Gtk.Menu {
         this.append (label2);
 
 		this.append (new Gtk.SeparatorMenuItem ());
-
+        stdout.printf(@"$(this.station.title) $(this.station.homepage)\n");
         if (this.station.homepage != null && this.station.homepage.length > 0) {
             var website_label = new Gtk.MenuItem.with_label (_("Visit Website"));
             this.append (website_label);

@@ -3,16 +3,16 @@
  * SPDX-FileCopyrightText: 2020-2022 Louis Brauer <louis@brauer.family>
  */
 
-public class Tuner.StationBox : Tuner.WelcomeButton {
+public class Tuner.ItemBox : Tuner.WelcomeButton {
 
-    public Model.Station station { get; construct; }
+    public Model.Item station { get; construct; }
     public StationContextMenu menu { get; private set; }
 
-    public StationBox (Model.Station station) {
+    public ItemBox (Model.Item station) {
         Object (
-            description: make_description (station.location),
-            title: make_title (station.title, station.starred),
-            tag: make_tag (station.codec, station.bitrate),
+            description: make_description (""),
+            title: station.title, // make_title (station.title, station.starred),
+            tag: "Category",
             icon: new Gtk.Image(),
             station: station
         );
@@ -53,18 +53,14 @@ public class Tuner.StationBox : Tuner.WelcomeButton {
         return Application.STAR_CHAR + title;
     }
 
-    private static string make_tag (string codec, int bitrate) {
-        var tag = codec;
-        if (bitrate > 0)
-        {
-            tag = tag + " " + bitrate.to_string() + "k";
-        }
-
-        return tag;
+    private static string make_tag (string location, string fallback) {
+        if(location != "")
+            return location;
+        return fallback;
     }
 
     private static string make_description (string location) {
-        if (location.length > 0) 
+        if (location != "") 
             return _(location);
         else
             return location;

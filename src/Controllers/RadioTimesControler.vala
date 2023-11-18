@@ -39,7 +39,7 @@ public class Tuner.RadioTimesController : Object {
 
     public ArrayList<Model.Item> categories () {
         try {
-            return provider.get_stations("Browse.ashx?render=json");
+            return provider.get_stations("Browse.ashx?filter=s");
         } catch (RadioTimes.DataError e) {
             critical (@"RadioTimes unavailable");
             return new ArrayList<Model.Item>();

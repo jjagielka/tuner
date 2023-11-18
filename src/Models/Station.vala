@@ -6,21 +6,34 @@
  public class Tuner.Model.Item : Object {
     public string title { get; set; }
     public virtual string  url { get; set; }
-    public string? favicon_url { get; set; }
- }
-
- public class Tuner.Model.Station : Item {
+    public string favicon_url { get; set; }
     public string id { get; set; }
-    public string location { get; set; }
     public bool starred { get; set; }
+    public void toggle_starred () {
+        this.starred = !this.starred;
+    }    
+    
     public string homepage { get; set; }
+    public string location { get; set; }
+    public Gee.ArrayList<Item>? children;
+    
+    public virtual string to_string() {
+        return @"[$(this.url)] $(this.title)";
+    }    
+}
+
+public delegate string Resolve(string x);
+
+public class Tuner.Model.Station : Item {
     public string codec { get; set; }
     public int bitrate { get; set; }
 
     public uint clickcount = 0;
 
+
     private string _url;
     private string _url_resolved = null;
+    public Resolve resolve = (x) => { return x; };
 
     public Station (string id, string title, string location, string url) {
         Object ();
@@ -32,11 +45,19 @@
         this.starred = starred;
     } 
 
-    public void toggle_starred () {
-        this.starred = !this.starred;
+    public override string url {
+        get {
+            if(_url_resolved == null)
+                _url_resolved = resolve(_url);
+            return _url_resolved;
+        }
+        set {
+            _url = value;
+            _url_resolved = null;
+        }
     }
 
-    public string to_string() {
+    public override string to_string() {
         return @"[$(this.id)] $(this.title)";
     }
 

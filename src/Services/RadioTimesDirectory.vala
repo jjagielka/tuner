@@ -44,12 +44,40 @@ public abstract class Element : Object {
     public string element { get; set; }  // "outline",
     //  public string type { get; set; }  // "link",
     public string text { get; set; }  // "Lokalne Radio",
-    public string URL { get; set; }  // "http://opml.radiotime.com/Browse.ashx?c=local",
     public abstract Model.Item to_model();
+}
+
+public class Group : Element {
+    public string key { get; set; }  // "local"
+    //  public Json.Array children { get; set; }
+    public ArrayList<Element> children;
+    
+    public string to_string () {
+        return @"Group: $text: $key";
+    }    
+
+    public override Model.Item to_model () {
+        var item = new Model.Item();
+        item.title = text;
+        item.url = "";
+        item.id = "guide_id";
+        item.homepage = "";
+        item.favicon_url = "";
+
+        if(children != null) {
+            var l = new ArrayList<Model.Item>();
+            children.foreach((x) => l.add(x.to_model()));
+            item.children = l;
+        }
+        
+        return item;
+    }
 }
 
 public class Link : Element {
     public string key { get; set; }  // "local"
+    public string URL { get; set; }  // "http://opml.radiotime.com/Browse.ashx?c=local",
+    public string? guide_id { get; set; }  // "s159857",
 
     public string to_string () {
         return @"Link: $text: $URL";
@@ -59,14 +87,17 @@ public class Link : Element {
         var item = new Model.Item();
         item.title = text;
         item.url = URL;
+        item.id = guide_id;
+        item.homepage = "";
+        item.favicon_url = "";
+        
         return item;
     }
 }
 
-public class StationRaw : Element {
+public class Station : Element {
     public string bitrate { get; set; }  // "256",
     public string reliability { get; set; }  // "99",
-    public string guide_id { get; set; }  // "s159857",
     public string subtext { get; set; }  // "Tearjerker - You Can",
     public string genre_id { get; set; }  // "g2748",
     public string formats { get; set; }  // "mp3",
@@ -76,81 +107,29 @@ public class StationRaw : Element {
     public string image { get; set; }  // "http://cdn-profiles.tunein.com/s159857/images/logoq.jpg",
     public string now_playing_id { get; set; }  // "s159857",
     public string preset_id { get; set; }  // "s159857"
+    public string URL { get; set; }  // "http://opml.radiotime.com/Browse.ashx?c=local",
+    public string guide_id { get; set; }  // "s159857",
 
     public override Model.Item to_model() {
         var station = new Model.Station(preset_id, text, "FR", URL);
-        station.homepage = "homepage";
+        station.homepage = "";
         station.codec = formats;
         station.bitrate = int.parse(bitrate);
+        station.location = "location";
+        station.favicon_url = image;
 
         station.clickcount = 0;
+        station.resolve = resolve;
         return station as Model.Item;
     }
-}
 
-public class Station : Object {
-    private StationRaw station { get; set; }
-
-    public Station(StationRaw station) {
-        this.station = station;
+    private string resolve(string url) {
+        var session = new Soup.Session ();
+        var message = new Soup.Message ("GET", url);
+        var response = session.send_message(message);
+        var body = (string) message.response_body.data;
+        return body.split("\n")[0];
     }
-
-    public string stationuuid {
-        get {
-            if(station.preset_id == null)
-                stdout.printf(@"$(station.text)\n");
-            return station.preset_id;
-        }
-    }
-    public string name {
-        get {
-            return station.text;
-        }
-    }
-
-    public string countrycode {
-        get {
-            return "FR";  // sure to change it
-        }
-    }
-
-    public string country {
-        get {
-            return "France";  // sure to change it
-        }
-    }
-    public string url_resolved {
-        get {
-            return station.URL;  
-        }
-    }
-    public string favicon {
-        get {
-            return station.image;  
-        }
-    }
-    public uint clickcount {
-        get {
-            return 23;  // sure to change it
-        }
-    }
-    public string homepage {
-        get {
-            return station.URL;  
-        }
-    }
-    public int bitrate {
-        get {
-            //  return 128000;  // sure to change it
-            return int.parse( station.bitrate );  
-        }
-    }
-    public string codec {
-        get {
-            return "aac";  // sure to change it
-        }
-    }
-
 }
 
 private const string[] DEFAULT_BOOTSTRAP_SERVERS = {
@@ -205,7 +184,7 @@ public class Client : Object {
         debug (@"response from radio-time.com: $response_code");
 
         var body = (string) message.response_body.data;
-        // stdout.printf(body);
+        //  stdout.printf(body);
 
         if (body == null) {
             throw new DataError.NO_CONNECTION (@"unable to read response");
@@ -223,23 +202,45 @@ public class Client : Object {
         };
     }
 
+
+    private Element? deserialize(Json.Node element) {
+
+        var _type = element.get_object().get_member("type");
+        if (_type != null) {
+            switch (_type.get_string())
+            {
+                case "link":
+                    return Json.gobject_deserialize (typeof (Link), element) as Element;
+                case "audio":
+                    return Json.gobject_deserialize (typeof (Station), element) as Element;
+                default:
+                    return null;
+            };
+        }
+
+        // not 'type' means Group
+        var group = Json.gobject_deserialize (typeof (Group), element) as Group;
+        var children = element.get_object().get_member("children").get_array();
+        if(children == null) 
+            return null;
+
+        group.children = new ArrayList<Element>();
+
+        children.foreach_element ((array, index, element) => {
+            var e = deserialize(element);
+            group.children.add(e);
+        });
+
+        return group as Element;
+    }
+
     public ArrayList<Model.Item> get_stations (string resource) throws DataError {
         ArrayList<Model.Item> result = new ArrayList<Model.Item>();
         var response = get_resource(resource);
+        info(@"RESP: $response");
+
         response.body.foreach_element ((array, index, element) => {
-            Element? obj;
-            switch (element.get_object().get_member("type").get_string())
-            {
-                case "link":
-                    obj = Json.gobject_deserialize (typeof (Link), element) as Element;
-                    break;
-                case "audio":
-                    obj = Json.gobject_deserialize (typeof (Station), element) as Element;
-                    break;
-                default:
-                    obj = null;
-                    break;
-            };
+            Element? obj = deserialize(element);
             if (obj != null) result.add (obj.to_model());
         });
 
