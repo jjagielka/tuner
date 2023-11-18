@@ -179,7 +179,6 @@ public class Client : Object {
 
     private Response get_resource (string resource) throws DataError {
         debug (@"RB $resource");
-        stdout.printf (@"RB $resource");
 
         var message = new Soup.Message ("GET", @"$current_server/$resource&render=json");
         Json.Node rootnode;

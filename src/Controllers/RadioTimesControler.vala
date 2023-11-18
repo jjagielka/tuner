@@ -72,10 +72,40 @@ public class Tuner.RTStationSource : Object {
         _url = url;
     }
 
+    private bool make_starred(Model.Item i) {
+        if(i is Model.RTStation) {
+            var s = i as Model.RTStation;
+            
+            if (_store.contains (s)) {
+                s.starred = true;
+            }
+
+            s.notify["starred"].connect ( (sender, property) => {
+                if (s.starred) {
+                    _store.add (s);
+                } else {
+                    _store.remove (s);
+                }
+            });
+            return true;
+        }
+        return false;
+    }
+
+    
     public ArrayList<Model.Item>? next () throws SourceError {
         // Fetch one more to determine if source has more items than page size 
         try {
             var stations = _client.get_stations (_url);
+            stations.foreach((i)=> {
+                if(i is Model.RTStation) {
+                    return make_starred(i);
+                } 
+                if(i.children != null) 
+                    return i.children.foreach((i)=> make_starred(i) );
+                return false;
+            });
+            
             return stations;
             
             // var filtered_stations = raw_stations.iterator ();
