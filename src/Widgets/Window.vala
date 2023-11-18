@@ -338,8 +338,6 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         // Radio Times
         foreach (var cat in _radiotimes.categories ()) {
             var item = new Granite.Widgets.SourceList.ExpandableItem (_(cat.title));
-            searched_category.collapsible = true;
-            searched_category.expanded = false;
     
             item.icon = new ThemedIcon ("playlist-symbolic");
             radio_times_category.add (item);
@@ -515,7 +513,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
                 slist.stations = item.children;
             }
 
-            cb.header_label.set_label(@"$(cb.header_label.label) - $(item.title)");
+            cb.header_label.set_label(@"$(cb.header_label.label) > $(item.title)");
             slist.show_all();
         }
     }

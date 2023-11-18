@@ -110,12 +110,17 @@ public class Station : Element {
     public string URL { get; set; }  // "http://opml.radiotime.com/Browse.ashx?c=local",
     public string guide_id { get; set; }  // "s159857",
 
+    Regex re = /\s\((.*)\)$/;
+
     public override Model.Item to_model() {
-        var station = new Model.RTStation(preset_id, text, "FR", URL);
+        var station = new Model.RTStation(preset_id, re.replace(text, text.length, 0, ""), "FR", URL);
         station.homepage = "";
         station.codec = formats;
         station.bitrate = int.parse(bitrate);
-        station.location = "location";
+        MatchInfo info;
+        if (re.match(text, 0, out info)) {
+            station.location = info.fetch(1);
+        }
         station.favicon_url = image;
 
         station.clickcount = 0;

@@ -23,7 +23,7 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
     private Model.Station _station;
     private Gtk.Label _title_label;
     private RevealLabel _subtitle_label;
-    private Gtk.Image _favicon_image;
+    private UrlImage _favicon_image;
 
     public signal void star_clicked (bool starred);
     public signal void searched_for (string text);
@@ -57,7 +57,7 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
         _title_label.get_style_context ().add_class (Granite.STYLE_CLASS_H4_LABEL);
         _title_label.ellipsize = Pango.EllipsizeMode.MIDDLE;
         _subtitle_label = new RevealLabel ();
-        _favicon_image = new Gtk.Image.from_icon_name (DEFAULT_ICON_NAME, Gtk.IconSize.DIALOG);
+        _favicon_image = new UrlImage(DEFAULT_ICON_NAME);
 
         station_info.attach (_favicon_image, 0, 0, 1, 2);
         station_info.attach (_title_label, 1, 0, 1, 1);
@@ -132,7 +132,7 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
         }
     }
 
-    public Gtk.Image favicon {
+    public UrlImage favicon {
         get {
             return _favicon_image;
         }
@@ -155,7 +155,7 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
         });
         title = station.title;
         subtitle = _("Playing");
-        load_favicon (station.favicon_url);
+        favicon.url = station.favicon_url;
         starred = station.starred;
     }
 
@@ -172,39 +172,6 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
                 star_button.image = new Gtk.Image.from_icon_name ("starred",    Gtk.IconSize.LARGE_TOOLBAR);
             }
         }
-    }
-
-    private void load_favicon (string url) {
-        // Set default icon first, in case loading takes long or fails
-        favicon.set_from_icon_name (DEFAULT_ICON_NAME, Gtk.IconSize.DIALOG);
-        if (url.length == 0) {
-            return;
-        }
-
-        var session = new Soup.Session ();
-        var message = new Soup.Message ("GET", url);
-
-        session.queue_message (message, (sess, mess) => {
-            if (mess.status_code != 200) {
-                warning (@"Unexpected status code: $(mess.status_code), will not render $(url)");
-                return;
-            }
-
-            var data_stream = new MemoryInputStream.from_data (mess.response_body.data);
-            Gdk.Pixbuf pxbuf;
-
-            try {
-                pxbuf = new Gdk.Pixbuf.from_stream_at_scale (data_stream, 48, 48, true, null);
-            } catch (Error e) {
-                warning ("Couldn't render favicon: %s (%s)",
-                    url ?? "unknown url",
-                    e.message);
-                return;
-            }
-
-            favicon.set_from_pixbuf (pxbuf);
-            favicon.set_size_request (48, 48);
-        });
     }
 
     public void set_playstate (PlayState state) {

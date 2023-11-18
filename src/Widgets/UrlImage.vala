@@ -17,6 +17,11 @@ public class Tuner.UrlImage : Gtk.Image {
             _cache_file = Path.build_filename (Application.instance.cache_dir, cache_id);
     }
     
+    public UrlImage.from_icon_name(string name, Gtk.IconSize size) {
+        this(name);
+        this.icon_size = icon_size;
+    }
+
     public string url {
         set {
             if(value == "") return;
