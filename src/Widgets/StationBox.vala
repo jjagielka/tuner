@@ -28,8 +28,8 @@ public class Tuner.StationBox : Tuner.WelcomeButton {
         // TODO Use a AsyncQueue with limited threads
         //  new Thread<int>("station-box", realize_favicon);
 
-        icon = new UrlImage("internet-radio", station.id);
-        icon.url = station.favicon_url;
+        icon = new UrlImage("internet-radio", Gtk.IconSize.DIALOG, station.id);
+        icon.set_from_url (station.favicon_url);
 
         event.connect ((e) => {
             if (e.type == Gdk.EventType.BUTTON_PRESS && e.button.button == 3) {

@@ -51,10 +51,10 @@ public class Group : Element {
     public string key { get; set; }  // "local"
     //  public Json.Array children { get; set; }
     public ArrayList<Element> children;
-    
+
     public string to_string () {
         return @"Group: $text: $key";
-    }    
+    }
 
     public override Model.Item to_model () {
         var item = new Model.Item();
@@ -69,7 +69,7 @@ public class Group : Element {
             children.foreach((x) => l.add(x.to_model()));
             item.children = l;
         }
-        
+
         return item;
     }
 }
@@ -90,7 +90,7 @@ public class Link : Element {
         item.id = guide_id;
         item.homepage = "";
         item.favicon_url = "";
-        
+
         return item;
     }
 }
@@ -125,6 +125,8 @@ public class Station : Element {
 
         station.clickcount = 0;
         station.resolve = resolve;
+
+        station.now_playing_url = playing_image;
         return station as Model.Item;
     }
 
@@ -139,6 +141,11 @@ public class Station : Element {
         debug (@"response: $(response_code)");
         return "";
     }
+}
+
+public class Description : Object {
+    public string current_artist_art { get; set; }
+    public string current_album_art { get; set; }
 }
 
 private const string[] DEFAULT_BOOTSTRAP_SERVERS = {
@@ -185,7 +192,7 @@ public class Client : Object {
     private Response get_resource (string resource) throws DataError {
         debug (@"RB $resource");
 
-        var message = new Soup.Message ("GET", @"$current_server/$resource&render=json");
+        var message = new Soup.Message ("GET", @"$current_server/$resource&filter=s&render=json");
         Json.Node rootnode;
 
         var response_code = _session.send_message (message);
@@ -210,6 +217,21 @@ public class Client : Object {
         };
     }
 
+
+    public string get_album_image(string station_id) {
+        // gn/T5N4K2CK39
+        var resource = @"Describe.ashx?id=$station_id";
+
+        var response = get_resource(resource);
+        var result = "";
+        response.body.foreach_element ((array, index, element) => {
+            Description? obj = Json.gobject_deserialize (typeof (Description), element) as Description;
+            if (obj != null && obj.current_album_art != null)
+                result = @"http://cdn-albums.tunein.com/$(obj.current_album_art)q.jpg";
+        });
+
+        return result;
+    }
 
     private Element? deserialize(Json.Node element) {
 
@@ -272,7 +294,7 @@ public class Client : Object {
 
         // by text or tags
         //  var resource = @"json/stations/search?limit=$rowcount&order=$(params.order)&offset=$offset";
-        var resource = @"Search.ashx?render=json&filter=c";
+        var resource = @"Search.ashx?render=json&filter=s";
         if (params.query != null && params.query != "") { 
             resource += @"&query=$(params.query)";
         }

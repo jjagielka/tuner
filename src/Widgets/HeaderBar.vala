@@ -57,7 +57,7 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
         _title_label.get_style_context ().add_class (Granite.STYLE_CLASS_H4_LABEL);
         _title_label.ellipsize = Pango.EllipsizeMode.MIDDLE;
         _subtitle_label = new RevealLabel ();
-        _favicon_image = new UrlImage(DEFAULT_ICON_NAME);
+        _favicon_image = new UrlImage(DEFAULT_ICON_NAME, Gtk.IconSize.DIALOG);
 
         station_info.attach (_favicon_image, 0, 0, 1, 2);
         station_info.attach (_title_label, 1, 0, 1, 1);
@@ -155,7 +155,7 @@ public class Tuner.HeaderBar : Gtk.HeaderBar {
         });
         title = station.title;
         subtitle = _("Playing");
-        favicon.url = station.favicon_url;
+        favicon.set_from_url (station.favicon_url);
         starred = station.starred;
     }
 

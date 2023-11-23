@@ -30,7 +30,7 @@ public class Tuner.RadioTimesController : Object {
         // var rsp = source.next();
         // stdout.printf(@"load_search_stations: $(rsp.size)\n");
         return source;
-    } 
+    }
 
     public RTStationSource load_by_url (owned string url, uint limit) {
         Soup.URI uri = new Soup.URI (url);
@@ -46,6 +46,9 @@ public class Tuner.RadioTimesController : Object {
         }
     }
 
+    public string get_album_image(string id) {
+        return provider.get_album_image (id);
+    }
 }
 
 public class Tuner.RTStationSource : Object {
@@ -75,7 +78,7 @@ public class Tuner.RTStationSource : Object {
     private bool make_starred(Model.Item i) {
         if(i is Model.RTStation) {
             var s = i as Model.RTStation;
-            
+
             if (_store.contains (s)) {
                 s.starred = true;
             }
@@ -92,7 +95,6 @@ public class Tuner.RTStationSource : Object {
         return false;
     }
 
-    
     public ArrayList<Model.Item>? next () throws SourceError {
         // Fetch one more to determine if source has more items than page size 
         try {

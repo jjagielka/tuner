@@ -24,8 +24,8 @@ public class Tuner.ItemBox : Tuner.WelcomeButton {
             this.title = make_title (this.station.title, this.station.starred);
         });
 
-        icon = new UrlImage("internet-radio");
-        icon.url = station.favicon_url;
+        icon = new UrlImage("internet-radio", Gtk.IconSize.DIALOG);
+        icon.set_from_url (station.favicon_url);
 
         event.connect ((e) => {
             if (e.type == Gdk.EventType.BUTTON_PRESS && e.button.button == 3) {

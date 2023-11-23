@@ -16,6 +16,7 @@ public class Tuner.DisplayBox : Gtk.Box {
     private Gtk.Label _homepage;
     private Gtk.Label _genre;
 
+
     public DisplayBox () {
         Object (
             orientation: Gtk.Orientation.HORIZONTAL,
@@ -28,15 +29,15 @@ public class Tuner.DisplayBox : Gtk.Box {
         var content = new Gtk.Box(Gtk.Orientation.VERTICAL, 12);
         vBox.set_center_widget(content);
 
-        
         _station_name_label = new HeaderLabel(_("Radio"));
         content.pack_start(_station_name_label);
-        
+
         var hBox = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 12);
-        
-        _favicon_image = new UrlImage(DEFAULT_ICON_NAME);
+
+        _favicon_image = new UrlImage(DEFAULT_ICON_NAME, Gtk.IconSize.DIALOG);
+        _favicon_image.keep_size = false;  // allow for image re-size
         hBox.pack_start(_favicon_image);
-        
+
         _title = new Gtk.Label(_("Playing"));
         _title.get_style_context ().add_class (Granite.STYLE_CLASS_H3_LABEL);
         hBox.pack_start(_title);
@@ -51,8 +52,16 @@ public class Tuner.DisplayBox : Gtk.Box {
     }
 
     public void update_from_station(Model.Station station) {
+        info("update from station");
         _station_name_label.set_label(station.title);
-        _favicon_image.url = station.favicon_url;
+        if(station is Model.RTStation) {
+            var rtStation = station as Model.RTStation;
+            if(rtStation.now_playing_url != null){
+                _favicon_image.set_from_url(rtStation.now_playing_url);
+                return;
+            }
+        }
+        _favicon_image.set_from_url(station.favicon_url);
     }
 
     public void update_from_info(Gst.PlayerMediaInfo info) {
@@ -60,17 +69,23 @@ public class Tuner.DisplayBox : Gtk.Box {
         foreach (var stream_info in streamlist) {
             var get_tag = TagListGetter(stream_info.get_tags());
 
-            _title.set_label(get_tag(Gst.Tags.TITLE));
-            _organization.set_label(get_tag(Gst.Tags.ORGANIZATION));
-            _homepage.set_label(get_tag(Gst.Tags.HOMEPAGE));
-            _genre.set_label(get_tag(Gst.Tags.GENRE));
+            _title.label = get_tag(Gst.Tags.TITLE);
+            _organization.label = get_tag(Gst.Tags.ORGANIZATION);
+            _homepage.label = get_tag(Gst.Tags.HOMEPAGE);
+            _genre.label = get_tag(Gst.Tags.GENRE);
+        }
+    }
+
+    public UrlImage favicon {
+        get {
+            return _favicon_image;
         }
     }
 
     private Gtk.Label row(Gtk.Box parent, string label) {
         var row = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 2);
         row.set_homogeneous(true);
-        
+
         var _label = new Gtk.Label(label);
         _label.halign = Gtk.Align.START;
         _label.xalign = 0;
@@ -83,5 +98,5 @@ public class Tuner.DisplayBox : Gtk.Box {
         parent.pack_start(row);
 
         return valueLabel;
-    }   
+    }
 }

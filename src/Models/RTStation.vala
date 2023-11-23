@@ -4,12 +4,14 @@
  */
 
 
- public delegate string Resolve(string x);
+public delegate string Resolve(string x);
 
 public class Tuner.Model.RTStation : Station {
     private string _url;
     private string _url_resolved = null;
     public Resolve resolve = (x) => { return x; };
+
+    public string now_playing_url { get; set; }
 
     public RTStation (string id, string title, string location, string url) {
         base(id, title, location, url);

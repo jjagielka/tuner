@@ -142,11 +142,16 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         var display_item = new Granite.Widgets.SourceList.Item (_("Display"));
         display_item.icon = new ThemedIcon ("playlist-queue");
         display_category.add (display_item);
-        
+
         var display_box = new DisplayBox();
-        display_box.realize.connect(() => { 
+        display_box.realize.connect(() => {
             player.station_changed.connect (display_box.update_from_station);
             player.info_changed.connect (display_box.update_from_info);
+            player.info_changed.connect ((x) => {
+                var url = _radiotimes.get_album_image(player.station.id);
+                stdout.printf(@"Album: @url\n");
+                display_box.favicon.set_from_url (url);
+            });
             display_box.update_from_station(player.station);
             display_box.update_from_info (player.player.media_info);
         });
@@ -154,7 +159,7 @@ public class Tuner.Window : Gtk.ApplicationWindow {
         var display_name = "display";
         display_item.set_data<string> ("stack_child", display_name);
         stack.add_named (display_box, display_name);
-        
+
         // Tags Box
         var tags_item = new Granite.Widgets.SourceList.Item (_("Tags"));
         tags_item.icon = new ThemedIcon ("playlist-queue");
